@@ -8,12 +8,12 @@ from sklearn.preprocessing import normalize
 from scipy import stats
 
 class Simulation:
-    def __init__(self, p, q, n, T) -> None:
+    def __init__(self, p, q, n, T, d0=-1) -> None:
         self.p = p
         self.q = q
         self.n = n
         self.T = T
-        self.generator = Generator.EdgeMarkovianGenerator(p, q, n, T)
+        self.generator = Generator.EdgeMarkovianGenerator(p, q, n, T, d0=d0)
 
     def simulate(self):
         self.generator.simulate()
@@ -21,8 +21,8 @@ class Simulation:
     def getResult(self):
         return list(self.generator.getDensityMap())
 
-def simulate(p, q, n, T):
-    simu = Simulation (p, q, n, T)
+def simulate(p, q, n, T, d0 = -1):
+    simu = Simulation (p, q, n, T, d0=d0)
     simu.simulate()
     return simu.getResult()
 
@@ -40,8 +40,9 @@ def truncatek(k):
 @click.argument("t", type=int)
 @click.argument("precision", type=int)
 @click.argument("mode", type=str)
-def main(p, q, n, t, precision, mode):
-    simuTruncated = list(map(truncatek(precision), simulate(p, q, n, t)))
+@click.option("--d0", type=float, default=-1)
+def main(p, q, n, t, precision, mode, d0):
+    simuTruncated = list(map(truncatek(precision), simulate(p, q, n, t, d0=d0)))
 
     if mode == "occurences":
         occurences = collections.OrderedDict(sorted(collections.Counter(simuTruncated).items()))
@@ -63,7 +64,7 @@ def main(p, q, n, t, precision, mode):
 
         # Then save the data in a csv
         df = pandas.DataFrame({"Density" : occurences_x, "Occurences" : occurences_y})
-        df.to_csv(f"occurences_of_density_{p}_{q}_{n}_{t}.csv")
+        df.to_csv(f"occurences_of_density_{p}_{q}_{n}_{t}_{d0:.3f}.csv")
 
     elif mode == "temporal":
 
@@ -78,11 +79,11 @@ def main(p, q, n, t, precision, mode):
         plt.ylim((0, 1))
         plt.title(f"Evolution through of densitiy on a whole simulation\nHere p={p}, q={q} and T={t}\tf'(m)={p + q - 1}")
         plt.legend(loc="best")
-        plt.savefig(f"evolution_of_density_{p}_{q}_{n}_{t}.png")
+        plt.savefig(f"evolution_of_density_{p}_{q}_{n}_{t}_{d0:.2f}.png")
 
         # Then save it in a csv
         df = pandas.DataFrame({"Time" : list(range(t+1)), "Density" : simuTruncated})
-        df.to_csv(f"evolution_of_density_{p}_{q}_{n}_{t}.csv")
+        df.to_csv(f"evolution_of_density_{p}_{q}_{n}_{t}_{d0:.2f}.csv")
 
     elif mode == "gaussianComparison":
         occurences = collections.OrderedDict(sorted(collections.Counter(simuTruncated).items()))
@@ -98,7 +99,7 @@ def main(p, q, n, t, precision, mode):
 
         # Save the data in a csv
         df = pandas.DataFrame({"Density" : occurences_x, "Occurences" : occurences_y})
-        df.to_csv(f"occurences_of_density_{p}_{q}_{n}_{t}.csv")
+        df.to_csv(f"occurences_of_density_{p}_{q}_{n}_{t}_{d0:.2f}.csv")
 
         # Plot a gaussian bell curve
         df = pandas.DataFrame({"Time" : list(range(t+1)), "Density" : simuTruncated})
@@ -116,7 +117,7 @@ def main(p, q, n, t, precision, mode):
         plt.ylabel("Occurences of density")
         plt.title(f"Distribution of densitiy on a whole simulation\nHere p={p}, q={q} and T={t}\tf'(m)={p + q - 1}")
         plt.legend(loc="best")
-        plt.savefig(f"comparison_occurences_of_density_{p}_{q}_{n}_{t}.png")
+        plt.savefig(f"comparison_occurences_of_density_{p}_{q}_{n}_{t}_{d0:.2f}.png")
 
 
 

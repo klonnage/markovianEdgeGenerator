@@ -4,15 +4,18 @@ import networkx as nx
 density = lambda G : nx.density(G)
 
 class EdgeMarkovianGenerator:
-    def __init__(self, p, q, n, T) -> None:
+    def __init__(self, p, q, n, T, d0 = -1) -> None:
         self.p = p
         self.q = q
         self.n = n
         self.t, self.T = 0, T
         self.graphs = []
-        estimated_limit = (1-q) / (2 - p - q) if p + q != 2 else random.random()
         if p == 0 and q == 0:
              estimated_limit = 0
+        elif d0 >= 0:
+            print(f"Using d0 = {d0}")
+            estimated_limit = d0
+        else:estimated_limit = (1-q) / (2 - p - q) if p + q != 2 else random.random()
         self.graphs.append(nx.random_graphs.binomial_graph(n, estimated_limit))
 
     def getLast(self) -> nx.Graph:
